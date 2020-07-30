@@ -1,0 +1,93 @@
+﻿AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Globals:
+  Function:
+    Runtime: dotnetcore3.1
+    MemorySize: 128
+    Timeout: 4
+    CodeUri: /
+
+Parameters:
+  StageApiGateway:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - uat
+      - prod
+    Description: Enter your stage name environment
+
+Mappings:
+  RoleLambda:
+    RoleExec:
+      Adm: arn:aws:iam::${AWS::Region}:role/role-adm-lambda-projects
+
+Resources:
+  ApiCoin:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref StageApiGateway
+      Name: api-serverless-net-core
+
+  AddCoin:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: Net.Core.API.Serverless.App::Net.Core.API.Serverless.App.Handlers.CoinHandler::Post
+      FunctionName: add-coin-at-s3
+      Role: !FindInMap [RoleLambda, RoleExec, Adm]
+      Events:
+        PostCoinApi:
+          Type: Api
+          Properties: 
+            Path: /coin
+            Method: POST            
+            RestApiId:
+              Ref: ApiCoin
+
+  GetCoinsByOrigin:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: Net.Core.API.Serverless.App::Net.Core.API.Serverless.App.Handlers.CoinHandler::Get
+      FunctionName: get-coins-at-s3
+      Events:
+        GetCoinApi:
+          Type: Api
+          Properties:
+            Path: /coin/origin/{origin}
+            Method: GET            
+            RestApiId:
+              Ref: ApiCoin
+
+  DeleteCoinByOrigin:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: Net.Core.API.Serverless.App::Net.Core.API.Serverless.App.Handlers.CoinHandler::Delete
+      FunctionName: delete-coin-at-s3
+      Role: !FindInMap[RoleLambda, RoleExec, Adm]
+      Events:
+        DeleteCoinApi:
+          Type: Api
+          Properties:
+            Path: coin/origin/{origin}
+            Method: DELETE
+            RestApiId:
+              Ref: ApiCoin
+
+
+Outputs:
+  GetCoinsByOriginFunction:
+    Description: Function Get Coin By Origin
+    Value: !Ref GetCoinsByOrigin
+  AddCoinFunction:
+    Description: Function Add Coin
+    Value: !Ref AddCoin
+  DeleteCoinFunction:
+    Description: delete coin function
+    Value: !Ref DeleteCoinByOrigin
+  ApiGateway:
+    Description: Api to operatite objects in s3
+    Value: !Sub 
+      - https://${idApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${stage}/s3/
+      - idApiGateway: !Ref ApiCoin 
+        stage: !Ref StageApiGateway 
