@@ -7,6 +7,7 @@ using Net.Core.API.Serverless.Infrastructure.AWS.S3.Interfaces;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 
 namespace Net.Core.API.Serverless.App.Services
@@ -47,9 +48,10 @@ namespace Net.Core.API.Serverless.App.Services
         {
             try
             {
-                Console.WriteLine($"parameters request \n {parameters}");
                 if (parameters == null || !parameters.ContainsKey("Origin"))
                     return new Response() { Body = "", HttpStatusCode = HttpStatusCode.BadRequest };
+                
+                Console.WriteLine($"Searching for Origin: {parameters["Origin"]}");
 
                 var result = _s3Helper.GetByKeyTextPlain<Coin>(BucketName, $"NetCore/{parameters["Origin"]}/", "/");
                 if (result != null)
@@ -59,6 +61,7 @@ namespace Net.Core.API.Serverless.App.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine(JsonConvert.SerializeObject(ex));
                 return new Response() { Body = JsonConvert.SerializeObject(new { Error = ex.Message, TypeError = "Error General" }), HttpStatusCode = HttpStatusCode.InternalServerError };
             }
         }

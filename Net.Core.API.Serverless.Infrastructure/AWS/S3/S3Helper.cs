@@ -83,6 +83,7 @@ namespace Net.Core.API.Serverless.Infrastructure.AWS.S3
             }
             catch (Exception ex)
             {
+                Console.WriteLine(JsonConvert.SerializeObject(ex));
                 throw ex;
             }            
         }
@@ -111,6 +112,7 @@ namespace Net.Core.API.Serverless.Infrastructure.AWS.S3
             }
             catch (Exception ex)
             {
+                Console.WriteLine(JsonConvert.SerializeObject(ex));
                 throw ex;
             }
         }

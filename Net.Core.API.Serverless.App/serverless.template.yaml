@@ -5,7 +5,7 @@ Globals:
   Function:
     Runtime: dotnetcore3.1
     MemorySize: 128
-    Timeout: 4
+    Timeout: 10
     CodeUri: /
 
 Parameters:
@@ -21,7 +21,7 @@ Parameters:
 Mappings:
   RoleLambda:
     RoleExec:
-      Adm: arn:aws:iam::${AWS::Region}:role/role-adm-lambda-projects
+      Adm: arn:aws:iam::${AWS::Account}:role/role-adm-lambda-projects
 
 Resources:
   ApiCoin:
@@ -50,6 +50,7 @@ Resources:
     Properties:
       Handler: Net.Core.API.Serverless.App::Net.Core.API.Serverless.App.Handlers.CoinHandler::Get
       FunctionName: get-coins-at-s3
+      Role: !FindInMap [RoleLambda, RoleExec, Adm]
       Events:
         GetCoinApi:
           Type: Api
@@ -59,17 +60,17 @@ Resources:
             RestApiId:
               Ref: ApiCoin
 
-  DeleteCoinByOrigin:
+  DeleteCoinByOriginAndName:
     Type: AWS::Serverless::Function
     Properties:
       Handler: Net.Core.API.Serverless.App::Net.Core.API.Serverless.App.Handlers.CoinHandler::Delete
       FunctionName: delete-coin-at-s3
-      Role: !FindInMap[RoleLambda, RoleExec, Adm]
+      Role: !FindInMap [RoleLambda, RoleExec, Adm]
       Events:
         DeleteCoinApi:
           Type: Api
           Properties:
-            Path: coin/origin/{origin}
+            Path: /coin/origin/{origin}/name/{name}
             Method: DELETE
             RestApiId:
               Ref: ApiCoin
@@ -82,9 +83,9 @@ Outputs:
   AddCoinFunction:
     Description: Function Add Coin
     Value: !Ref AddCoin
-  DeleteCoinFunction:
-    Description: delete coin function
-    Value: !Ref DeleteCoinByOrigin
+  DeleteCoinByOriginAndNameFunction:
+    Description: Function delete coin by origin and name
+    Value: !Ref DeleteCoinByOriginAndName
   ApiGateway:
     Description: Api to operatite objects in s3
     Value: !Sub 
