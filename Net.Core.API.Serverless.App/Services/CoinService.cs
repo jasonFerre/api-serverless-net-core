@@ -70,10 +70,10 @@ namespace Net.Core.API.Serverless.App.Services
         {
             try
             {
-                Console.WriteLine($"parameters request \n {parameters}");
                 if (parameters == null || !parameters.ContainsKey("Origin"))
                     return new Response() { Body = "", HttpStatusCode = HttpStatusCode.BadRequest };
 
+                Console.WriteLine($"Searching for Origin: {parameters["Origin"]}");
                 if (_s3Helper.Delete(BucketName, $"NetCore/{parameters["Origin"]}"))
                 {
                     Console.WriteLine("Deleted with success");
@@ -90,9 +90,32 @@ namespace Net.Core.API.Serverless.App.Services
             }
         }
 
-        //public Response Update()
-        //{
+        public Response Update(string body)
+        {
+            try
+            {
+                Console.WriteLine($"body request \n {body}");
+                var coinBody = new Coin(JsonConvert.DeserializeObject<PutCoinCommand>(body));
 
-        //}
+                var currentlyObj = _s3Helper.GetByKeyTextPlain<Coin>(BucketName, $"NetCore/{coinBody.Origin}/", "/").FirstOrDefault();
+                if (currentlyObj == null)
+                    return new Response() { Body = new { Error = "Object not found", HttpStatusCode = HttpStatusCode.OK } };
+
+                currentlyObj.Update(coinBody);
+                _s3Helper.Put(BucketName, $"NetCore/{currentlyObj.Origin}/{currentlyObj.CoinName}", JsonConvert.SerializeObject(currentlyObj));
+
+                return new Response() { Body = coinBody, HttpStatusCode = HttpStatusCode.NoContent };
+            }
+            catch (DomainException ex)
+            {
+                Console.WriteLine(JsonConvert.SerializeObject(ex));
+                return new Response() { Body = new { Error = ex.Message, TypeError = "DomainValidation" }, HttpStatusCode = HttpStatusCode.BadRequest };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(JsonConvert.SerializeObject(ex));
+                return new Response() { Body = new { Error = ex.Message, TypeError = "Error General" }, HttpStatusCode = HttpStatusCode.InternalServerError };
+            }
+        }
     }
 }

@@ -8,5 +8,6 @@ namespace Net.Core.API.Serverless.App.Interfaces
         Response Add(string body);
         Response GetCoinsByOrigin(IDictionary<string, string> parameters);
         Response DeleteCoinByOrigin(IDictionary<string, string> parameters);
+        Response Update(string body);
     }
 }

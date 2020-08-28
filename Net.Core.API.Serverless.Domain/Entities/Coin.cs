@@ -20,6 +20,12 @@ namespace Net.Core.API.Serverless.Domain.Entities
 
         public Coin() {}
 
+        public void Update(Coin coin)
+        {
+            Info = coin?.Info;
+            CoinValue = coin?.CoinValue;
+        }
+
         public void Validation(ICoinRequest request)
         {
             if (string.IsNullOrEmpty(request.CoinName) || string.IsNullOrWhiteSpace(request.CoinName))

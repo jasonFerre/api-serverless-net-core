@@ -3,7 +3,6 @@ using Amazon.Lambda.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Net.Core.API.Serverless.App.Interfaces;
 using Net.Core.API.Serverless.App.Util;
-using Newtonsoft.Json;
 
 namespace Net.Core.API.Serverless.App.Handlers
 {
@@ -35,7 +34,15 @@ namespace Net.Core.API.Serverless.App.Handlers
         public APIGatewayProxyResponse Delete(APIGatewayProxyRequest request, ILambdaContext context)
         {
             context.Logger.LogLine("Request incoming - delete");
-            var result = _coinService.DeleteCoinByOrigin(request.PathParameters);
+            var result = _coinService.DeleteCoinByOrigin(request.QueryStringParameters);
+
+            return new ResponseProxy().ResponseStatus(result);
+        }
+
+        public APIGatewayProxyResponse Update(APIGatewayProxyRequest request, ILambdaContext context)
+        {
+            context.Logger.LogLine("Request incoming - update");
+            var result = _coinService.Update(request.Body);
 
             return new ResponseProxy().ResponseStatus(result);
         }

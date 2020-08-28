@@ -21,7 +21,8 @@ Parameters:
 Mappings:
   RoleLambda:
     RoleExec:
-      Adm: arn:aws:iam::${AWS::Account}:role/role-adm-lambda-projects
+      Adm: !Sub 
+        - arn:aws:iam::${AWS::Account}:role/role-adm-lambda-projects
 
 Resources:
   ApiCoin:
@@ -75,8 +76,25 @@ Resources:
             RestApiId:
               Ref: ApiCoin
 
+  UpdateCoin:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: Net.Core.API.Serverless.App::Net.Core.API.Serverless.App.Handlers.CoinHandler::Update
+      FunctionName: update-coin-at-s3
+      Role: !FindInMap [RoleLambda, RoleExec, Adm]
+      Events:
+        UpdateCoinApi:
+          Type: Api
+          Properties:
+            Path: /coin
+            Method: PUT
+            RestApiId:
+              Ref: ApiCoin
 
 Outputs:
+  UpdateCoinFunction:
+    Description: Function Update Coin By Origin
+    Value: !Ref UpdateCoin
   GetCoinsByOriginFunction:
     Description: Function Get Coin By Origin
     Value: !Ref GetCoinsByOrigin
@@ -92,3 +110,4 @@ Outputs:
       - https://${idApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${stage}/s3/
       - idApiGateway: !Ref ApiCoin 
         stage: !Ref StageApiGateway 
+  
